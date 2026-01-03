@@ -1,19 +1,14 @@
 {
   "name": "Python 3",
-  "image": "mcr.microsoft.com/devcontainers/python:3.9",
+  "image": "mcr.microsoft.com/devcontainers/python:3.10",
   "features": {
-    "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/common-utils:2": {}
   },
   "customizations": {
     "vscode": {
-      "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "editor.formatOnSave": true
-      },
+      "settings": {},
       "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance"
+        "ms-python.python"
       ]
     }
   }
