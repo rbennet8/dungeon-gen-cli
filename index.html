@@ -261,10 +261,10 @@
         }
 
         // Event Check (rare random event)
+        const roomEvents = ["Strange Noise", "NPC Hiding", "Puzzle Lock", "Environmental Hazard"];
         let eventTxt = "None";
         if (Math.random() < 0.15) {
-            const events = ["Strange Noise", "NPC Hiding", "Puzzle Lock", "Environmental Hazard"];
-            eventTxt = events[Math.floor(Math.random() * events.length)];
+            eventTxt = roomEvents[Math.floor(Math.random() * roomEvents.length)];
             hasContent = true;
         }
 
@@ -278,8 +278,7 @@
             } else if (fallback === 2) {
                 secretTxt = generateSecret();
             } else {
-                const events = ["Strange Noise", "NPC Hiding", "Puzzle Lock", "Environmental Hazard"];
-                eventTxt = events[Math.floor(Math.random() * events.length)];
+                eventTxt = roomEvents[Math.floor(Math.random() * roomEvents.length)];
             }
         }
 
@@ -389,10 +388,6 @@
                 }
             }
             
-            if (!hasContent && Math.random() < 0.5) {
-                log("Road is clear.");
-            }
-            
             updateVillageUI();
             return;
         }
@@ -437,10 +432,10 @@
             }
             
             // Event
+            const buildingEvents = ["NPC Resident", "Locked Chest", "Barricaded Door", "Strange Smell"];
             let eventTxt = "None";
             if (Math.random() < 0.15) {
-                const events = ["NPC Resident", "Locked Chest", "Barricaded Door", "Strange Smell"];
-                eventTxt = events[Math.floor(Math.random() * events.length)];
+                eventTxt = buildingEvents[Math.floor(Math.random() * buildingEvents.length)];
                 hasContent = true;
             }
             
@@ -454,8 +449,7 @@
                 } else if (fallback === 2) {
                     secretTxt = generateSecret();
                 } else {
-                    const events = ["NPC Resident", "Locked Chest", "Barricaded Door", "Strange Smell"];
-                    eventTxt = events[Math.floor(Math.random() * events.length)];
+                    eventTxt = buildingEvents[Math.floor(Math.random() * buildingEvents.length)];
                 }
             }
             
