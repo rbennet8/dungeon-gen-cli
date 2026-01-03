@@ -59,3 +59,26 @@ When the DM grants a Level Up, apply the following increases to your character s
 > * **HP:** +6.
 > * **Mana:** +3.
 > * **Armor:** +1 (Even levels only).
+
+
+# 📂 Project Structure
+
+This repository contains two standalone Python scripts designed to run in a CLI (Command Line Interface).
+
+## 1. `dungeon_gen.py` (The DM Engine)
+This is the core tool for the Dungeon Master. It procedurally generates encounters, loot, and environments so you don't have to prep stats beforehand.
+
+* **Campaign Configuration:** At launch, you define the **Player Count**, **Average Level**, and **Game Style** (Survival vs. Power Fantasy).
+* **Procedural Biomes:**
+    * **The Field:** Generates a "Warzone" or "Horde" battle with a hierarchy of enemies (Grunts → MiniBosses → Bosses).
+    * **The Building:** Creates a dungeon crawl with 10-15 rooms, randomized loot containers, and enemy encounters.
+    * **The Village:** Generates a network of roads and buildings with potential NPC trade encounters.
+* **Math & Scaling:** Automatically scales enemy HP, Damage, and Armor based on the party level and selected difficulty.
+* **Loot System:** Generates generic loot drops (e.g., "Rare Weapon", "Legendary Consumable") based on enemy tier.
+
+## 2. `player_gen.py` (Character & NPC Generator)
+A utility script to instantly generate stat blocks for players or NPCs. This is useful for spinning up a quick replacement character or populating a town with unique NPCs.
+
+* **Point-Buy Simulation:** It uses the same math as the "Player Rules" below, simulating a player distributing points into Strength, Dexterity, and Intelligence.
+* **Level Scaling:** Generates stats appropriate for any target level input.
+* **Trait Randomizer:** Rolls a random number (1-3) to determine how many physical or psychological traits the character should possess.
