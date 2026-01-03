@@ -1,99 +1,118 @@
-#!/usr/bin/env python3
-"""
-Dungeon Generator CLI
-Generates procedural dungeons based on user inputs.
-"""
+# Dungeon Generator CLI
 
-import enum
-import random
-
-# Enums
-class ItemType(enum.Enum):
-    WEAPON = "Weapon"
-    ARMOR = "Armor"
-    CONSUMABLE = "Consumable"
-
-class Rarity(enum.Enum):
-    COMMON = "Common"
-    RARE = "Rare"
-    LEGENDARY = "Legendary"
-
-class EnemyTier(enum.Enum):
-    GRUNT = "Grunt"
-    MINIBOSS = "MiniBoss"
-    BOSS = "Boss"
-    FINALBOSS = "FinalBoss"
-
-class Stats(enum.Enum):
-    HEALTH = "Health"
-    MANA = "Mana"
-    STR = "Strength"
-    DEX = "Dexterity"
-    INT = "Intelligence"
-    ARMOR = "Armor"
-
-# Dungeon generator logic
-BASE_STATS = {
-    EnemyTier.GRUNT: {Stats.HEALTH: 10, Stats.MANA: 5, Stats.STR: 3, Stats.DEX: 3, Stats.INT: 2, Stats.ARMOR: 1},
-    EnemyTier.MINIBOSS: {Stats.HEALTH: 50, Stats.MANA: 25, Stats.STR: 15, Stats.DEX: 10, Stats.INT: 10, Stats.ARMOR: 5},
-    EnemyTier.BOSS: {Stats.HEALTH: 150, Stats.MANA: 50, Stats.STR: 30, Stats.DEX: 20, Stats.INT: 20, Stats.ARMOR: 10},
-    EnemyTier.FINALBOSS: {Stats.HEALTH: 400, Stats.MANA: 100, Stats.STR: 50, Stats.DEX: 30, Stats.INT: 40, Stats.ARMOR: 20}
-}
-
-def generate_enemy_stats(enemy_tier, avg_level, total_mod):
-    base_stats = BASE_STATS[enemy_tier]
+# Biome B - The Building
+# Simulates a dungeon made of interconnected rooms, such as castles or fortresses.
+def biome_b():
+    rooms = generate_rooms()
+    hallways = connect_rooms(rooms)
+    add_detail_to_rooms(rooms)
     return {
-        stat: max(1, int(value * avg_level * total_mod)) for stat, value in base_stats.items()
+        "rooms": rooms,
+        "hallways": hallways,
     }
 
-def generate_loot(enemy_tier):
-    drop_chance = {
-        EnemyTier.GRUNT: 0.2,
-        EnemyTier.MINIBOSS: 0.5,
-        EnemyTier.BOSS: 0.8,
-        EnemyTier.FINALBOSS: 1.0
+def generate_rooms():
+    # Implementation for room generation
+    pass
+
+def connect_rooms(rooms):
+    # Implementation for connecting rooms
+    pass
+
+def add_detail_to_rooms(rooms):
+    # Implementation for adding details to the rooms
+    pass
+
+
+# Biome C - The Village
+# Generates a small village with buildings and NPCs.
+def biome_c():
+    buildings = generate_buildings()
+    npcs = generate_npcs_for_village()
+    add_paths_between_buildings(buildings)
+    return {
+        "buildings": buildings,
+        "npcs": npcs,
     }
-    if random.random() <= drop_chance[enemy_tier]:
-        rarity = random.choices(
-            [Rarity.COMMON, Rarity.RARE, Rarity.LEGENDARY],
-            weights=[70, 25, 5] if enemy_tier == EnemyTier.GRUNT else
-                     [30, 60, 10] if enemy_tier == EnemyTier.MINIBOSS else
-                     [10, 40, 50]
-        )[0]
-        item_type = random.choice(list(ItemType))
-        return f"{rarity.value} {item_type.value}"
-    return "None"
 
-def generate_biome_field(num_players, avg_level, total_mod):
-    base_count = num_players * (4 if total_mod > 1 else 1)
-    for i in range(base_count):
-        tier = random.choices(
-            [EnemyTier.GRUNT, EnemyTier.MINIBOSS, EnemyTier.BOSS],
-            weights=[80, 15, 5]
-        )[0]
-        stats = generate_enemy_stats(tier, avg_level, total_mod)
-        loot = generate_loot(tier)
-        print(f"Enemy {i + 1} [{tier.value}] - Stats: {stats} | Loot: {loot}")
-    # FinalBoss
-    stats = generate_enemy_stats(EnemyTier.FINALBOSS, avg_level, total_mod * 2.5)
-    loot = generate_loot(EnemyTier.FINALBOSS)
-    print(f"FinalBoss - Stats: {stats} | Loot: {loot}")
+def generate_buildings():
+    # Implementation for building generation
+    pass
 
-def main():
-    print("Welcome to Dungeon Generator\n")
+def generate_npcs_for_village():
+    # Implementation for NPCs generation in the village
+    pass
 
-    # Get inputs
-    num_players = int(input("Enter the number of players: "))
-    avg_level = int(input("Enter the average level of players: "))
-    campaign_style = input("Enter campaign style (Survival/Power Fantasy): ").strip().lower()
-    difficulty = input("Enter difficulty (Easy/Medium/Hard): ").strip().lower()
+def add_paths_between_buildings(buildings):
+    # Implementation for adding paths
+    pass
 
-    # Determine modifier
-    campaign_mod = 1.5 if campaign_style == "survival" else 0.6
-    difficulty_mod = 0.8 if difficulty == "easy" else 1.0 if difficulty == "medium" else 1.2
-    total_mod = campaign_mod * difficulty_mod
 
-    generate_biome_field(num_players, avg_level, total_mod)
+# Random Encounters
+# Adds surprises by introducing random encounters in any biome.
+def random_encounters():
+    encounters = ["wolf pack", "wandering merchant", "bandit ambush", "hidden treasure"]
+    return random.choice(encounters)
 
-if __name__ == "__main__":
-    main()
+
+# Item Generation
+# Generates items that can be found or used by players.
+def item_generation():
+    items = [generate_weapon(), generate_potion(), generate_key_item()]
+    return items
+
+def generate_weapon():
+    # Algorithm for weapon generation
+    pass
+
+def generate_potion():
+    # Algorithm for potion generation
+    pass
+
+def generate_key_item():
+    # Algorithm for key item generation
+    pass
+
+
+# NPC Generation
+# Generates NPCs with varied traits and purposes.
+def npc_generation():
+    return {
+        "name": generate_npc_name(),
+        "role": assign_npc_role(),
+        "dialogue": generate_npc_dialogue(),
+    }
+
+def generate_npc_name():
+    # Algorithm for creating NPC names
+    pass
+
+def assign_npc_role():
+    # Algorithm for assigning roles to NPC
+    pass
+
+def generate_npc_dialogue():
+    # Algorithm for creating NPC dialogue
+    pass
+
+
+# Loot Distribution
+# Distributes loot across biomes, rooms, and random encounters.
+def loot_distribution():
+    loot = []
+    distribute_loot_across_rooms(loot)
+    distribute_loot_among_npcs(loot)
+    add_loot_to_random_encounters(loot)
+    return loot
+
+def distribute_loot_across_rooms(loot):
+    # Method to add loot to rooms
+    pass
+
+def distribute_loot_among_npcs(loot):
+    # Method to give NPCs some loot
+    pass
+
+def add_loot_to_random_encounters(loot):
+    # Method to scatter loot in random encounters
+    pass
