@@ -163,17 +163,7 @@
     }
 
     function generateSecret() {
-        const secrets = [
-            "Hidden Door",
-            "Trap (Inactive)",
-            "Trap (Active)",
-            "Secret Passage",
-            "Hidden Compartment",
-            "Clue/Map Fragment",
-            "Strange Writing",
-            "Suspicious Marking"
-        ];
-        return secrets[Math.floor(Math.random() * secrets.length)];
+        return "Yes";
     }
 
     function formatEnemy(tier, index) {
@@ -189,6 +179,14 @@
         clearLog();
         const count = Math.floor(config.players * config.spawnMod);
         log(`<strong>--- FIELD BATTLE (${count} Enemies) ---</strong>`);
+        
+        // Secret Check for Field
+        let secretTxt = "None";
+        if (Math.random() < 0.25) {
+            secretTxt = generateSecret();
+        }
+        log(`Secret: ${secretTxt}`);
+        log("");
         
         let html = "";
         for (let i = 1; i <= count; i++) {
