@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DM Assistant</title>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #bb86fc; --danger: #cf6679; }
-        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #bb86fc; --danger: #cf6679; --success: #03dac6; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 50px;}
         h1, h2, h3 { color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; }
         .card { background-color: var(--card); padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; background: #333; color: white; border: 1px solid #444; border-radius: 4px; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; background: #333; color: white; border: 1px solid #444; border-radius: 4px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; margin-top: 10px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         button.secondary { background-color: #444; color: white; }
         button.danger { background-color: var(--danger); color: white; }
-        #output { white-space: pre-wrap; font-family: monospace; background: #000; padding: 15px; border-radius: 4px; min-height: 100px; border: 1px solid #333; }
+        button.house { background-color: var(--success); color: black; }
+        #output { white-space: pre-wrap; font-family: monospace; background: #000; padding: 15px; border-radius: 4px; min-height: 150px; max-height: 400px; overflow-y: auto; border: 1px solid #333; }
         .hidden { display: none; }
         .enemy-row { border-bottom: 1px solid #333; padding: 5px 0; }
         .rare { color: #03dac6; }
@@ -48,10 +49,15 @@
 
     <div id="game-panel" class="hidden">
         <div class="card">
-            <h3>Actions</h3>
-            <button onclick="runField()">⚔️ Field (Horde)</button>
-            <button onclick="startBuilding()">🏰 Building (Dungeon)</button>
-            <button onclick="startVillage()">🏘️ Village</button>
+            <h3>Biome Select</h3>
+            <button onclick="runField()">⚔️ Field (Horde Battle)</button>
+            <button onclick="startVillage()">🏘️ Generate Village</button>
+            
+            <label style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">Interiors</label>
+            <button class="house" onclick="startBuilding(5)">🏠 Generate House (Small)</button>
+            <button onclick="startBuilding(15)">🏰 Generate Dungeon (Large)</button>
+            
+            <label style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">Tools</label>
             <button class="secondary" onclick="generatePlayer()">👤 Generate Random NPC</button>
             <button class="danger" onclick="resetGame()">⚙️ Re-Configure</button>
         </div>
@@ -74,8 +80,7 @@
     let config = {};
     let roomCounter = 0;
     let maxRooms = 0;
-    let buildingMode = false;
-
+    
     // --- MATH & LOGIC ---
     const BASE_STATS = {
         Grunt: { hp: 20, mana: 5, str: 4, armor: 10 },
@@ -167,13 +172,23 @@
         log(formatEnemy('FinalBoss'));
     }
 
-    function startBuilding() {
+    function startBuilding(sizeLimit) {
         roomCounter = 0;
-        maxRooms = Math.floor(Math.random() * 6) + 10; // 10-15
+        
+        if (sizeLimit === 5) {
+            // Small House Logic
+            maxRooms = Math.floor(Math.random() * 5) + 1; 
+            document.getElementById('room-title').innerText = "Small House";
+            log(`<strong>--- ENTERING HOUSE (${maxRooms} Rooms) ---</strong>`);
+        } else {
+            // Large Dungeon Logic
+            maxRooms = Math.floor(Math.random() * 6) + 10;
+            document.getElementById('room-title').innerText = "Dungeon Crawl";
+            log(`<strong>--- ENTERING DUNGEON (${maxRooms} Rooms) ---</strong>`);
+        }
+
         document.getElementById('room-controls').classList.remove('hidden');
-        document.getElementById('room-title').innerText = "Dungeon Crawl";
         clearLog();
-        log(`<strong>--- ENTERING BUILDING (${maxRooms} Rooms) ---</strong>`);
         nextRoom();
     }
 
@@ -219,7 +234,7 @@
 
     function endBuilding() {
         document.getElementById('room-controls').classList.add('hidden');
-        log("<strong>--- DUNGEON CLEARED ---</strong>");
+        log("<strong>--- CLEARED ---</strong>");
     }
 
     function startVillage() {
@@ -239,7 +254,8 @@
             }
 
             let buildings = Math.floor(Math.random() * 4) + 1;
-            log(`Contains ${buildings} Buildings (Click 'Building Mode' to enter one).`);
+            // Updated Instruction Text
+            log(`Contains ${buildings} Buildings (Click 'Generate House' to enter one).`);
         }
     }
 
