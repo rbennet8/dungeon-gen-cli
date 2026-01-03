@@ -162,6 +162,20 @@
         return `${rarity} ${type}`;
     }
 
+    function generateSecret() {
+        const secrets = [
+            "Hidden Door",
+            "Trap (Inactive)",
+            "Trap (Active)",
+            "Secret Passage",
+            "Hidden Compartment",
+            "Clue/Map Fragment",
+            "Strange Writing",
+            "Suspicious Marking"
+        ];
+        return secrets[Math.floor(Math.random() * secrets.length)];
+    }
+
     function formatEnemy(tier, index) {
         const stats = calculateStats(tier, tier === 'FinalBoss');
         const loot = generateLoot(tier);
@@ -220,18 +234,59 @@
 
         const size = ["Small", "Medium", "Huge"][Math.floor(Math.random() * 3)];
         
+        // Track if room has any content
+        let hasContent = false;
+        
         // Loot Check
         let lootTxt = "None";
         if (Math.random() < (0.3 + config.lootMod)) {
             const rarities = ["Common", "Rare", "Legendary"];
             const r = rarities[Math.floor(Math.random() * rarities.length)];
             lootTxt = `${r} Container`;
+            hasContent = true;
         }
 
-        log(`<strong>[Room ${roomCounter}]</strong> Size: ${size} | Loot: ${lootTxt}`);
-
         // Encounter Check
+        let hasEncounter = false;
         if (Math.random() < 0.4) {
+            hasEncounter = true;
+            hasContent = true;
+        }
+
+        // Secret Check
+        let secretTxt = "None";
+        if (Math.random() < 0.25) {
+            secretTxt = generateSecret();
+            hasContent = true;
+        }
+
+        // Event Check (rare random event)
+        let eventTxt = "None";
+        if (Math.random() < 0.15) {
+            const events = ["Strange Noise", "NPC Hiding", "Puzzle Lock", "Environmental Hazard"];
+            eventTxt = events[Math.floor(Math.random() * events.length)];
+            hasContent = true;
+        }
+
+        // Ensure room has at least one thing
+        if (!hasContent) {
+            const fallback = Math.floor(Math.random() * 4);
+            if (fallback === 0) {
+                lootTxt = "Common Container";
+            } else if (fallback === 1) {
+                hasEncounter = true;
+            } else if (fallback === 2) {
+                secretTxt = generateSecret();
+            } else {
+                const events = ["Strange Noise", "NPC Hiding", "Puzzle Lock", "Environmental Hazard"];
+                eventTxt = events[Math.floor(Math.random() * events.length)];
+            }
+        }
+
+        log(`<strong>[Room ${roomCounter}]</strong> Size: ${size}`);
+        log(`Items: ${lootTxt} | Secret: ${secretTxt} | Event: ${eventTxt}`);
+
+        if (hasEncounter) {
             let count = Math.floor(Math.random() * 3) + 1;
             if (config.style === 'power') count *= 2;
             
@@ -302,11 +357,39 @@
 
             log(`<br><strong>=== ROAD ${vState.currentRoad} ===</strong>`);
             
-            // Road Event
+            // Track if road has any content
+            let hasContent = false;
+            
+            // Encounter/Event Check
             if(Math.random() < 0.25) {
-                if(Math.random() < 0.5) log(formatEnemy('MiniBoss') + " (Ambush!)");
-                else log(`>> NPC TRADER (${['Common','Rare','Legendary'][Math.floor(Math.random()*3)]})`);
-            } else {
+                if(Math.random() < 0.5) {
+                    log(formatEnemy('MiniBoss') + " (Ambush!)");
+                    hasContent = true;
+                } else {
+                    log(`>> NPC TRADER (${['Common','Rare','Legendary'][Math.floor(Math.random()*3)]})`);
+                    hasContent = true;
+                }
+            }
+            
+            // Secret Check
+            if(Math.random() < 0.2) {
+                log(`>> Secret: ${generateSecret()}`);
+                hasContent = true;
+            }
+            
+            // Ensure road has at least one thing
+            if (!hasContent) {
+                const fallback = Math.floor(Math.random() * 3);
+                if (fallback === 0) {
+                    log(formatEnemy('Grunt') + " (Wandering)");
+                } else if (fallback === 1) {
+                    log(`>> Secret: ${generateSecret()}`);
+                } else {
+                    log(`>> Event: ${['Broken Cart', 'Footprints', 'Campfire Remains', 'Lost Item'][Math.floor(Math.random() * 4)]}`);
+                }
+            }
+            
+            if (!hasContent && Math.random() < 0.5) {
                 log("Road is clear.");
             }
             
@@ -328,17 +411,58 @@
             
             const size = ["Small", "Medium", "Large"][Math.floor(Math.random() * 3)];
             
+            // Track if room has content
+            let hasContent = false;
+            
             // Loot
             let lootTxt = "None";
             if (Math.random() < (0.3 + config.lootMod)) {
                 const rar = ["Common", "Rare", "Legendary"][Math.floor(Math.random() * 3)];
                 lootTxt = `${rar} Item`;
+                hasContent = true;
             }
             
-            buildingHTML += `<strong>Rm ${r}:</strong> ${size} | Loot: ${lootTxt}<br>`;
-
             // Encounter
+            let hasEncounter = false;
             if (Math.random() < 0.3) {
+                hasEncounter = true;
+                hasContent = true;
+            }
+            
+            // Secret
+            let secretTxt = "None";
+            if (Math.random() < 0.2) {
+                secretTxt = generateSecret();
+                hasContent = true;
+            }
+            
+            // Event
+            let eventTxt = "None";
+            if (Math.random() < 0.15) {
+                const events = ["NPC Resident", "Locked Chest", "Barricaded Door", "Strange Smell"];
+                eventTxt = events[Math.floor(Math.random() * events.length)];
+                hasContent = true;
+            }
+            
+            // Ensure room has at least one thing
+            if (!hasContent) {
+                const fallback = Math.floor(Math.random() * 4);
+                if (fallback === 0) {
+                    lootTxt = "Common Item";
+                } else if (fallback === 1) {
+                    hasEncounter = true;
+                } else if (fallback === 2) {
+                    secretTxt = generateSecret();
+                } else {
+                    const events = ["NPC Resident", "Locked Chest", "Barricaded Door", "Strange Smell"];
+                    eventTxt = events[Math.floor(Math.random() * events.length)];
+                }
+            }
+            
+            buildingHTML += `<strong>Rm ${r}:</strong> ${size}<br>`;
+            buildingHTML += `Items: ${lootTxt} | Secret: ${secretTxt} | Event: ${eventTxt}<br>`;
+
+            if (hasEncounter) {
                 let count = Math.floor(Math.random() * 2) + 1; // 1-2 enemies in house
                 for (let e=0; e<count; e++) {
                     let tier = Math.random() > 0.9 ? 'MiniBoss' : 'Grunt';
