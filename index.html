@@ -20,6 +20,7 @@
         .enemy-row { border-bottom: 1px solid #333; padding: 5px 0; }
         .rare { color: #03dac6; }
         .legendary { color: #ffb74d; font-weight: bold; }
+        .room-block { margin-bottom: 10px; border-left: 2px solid #333; padding-left: 10px; }
     </style>
 </head>
 <body>
@@ -51,10 +52,10 @@
         <div class="card">
             <h3>Biome Select</h3>
             <button onclick="runField()">⚔️ Field (Horde Battle)</button>
-            <button onclick="startVillage()">🏘️ Generate Village</button>
+            <button onclick="initVillage()">🏘️ Enter Village Mode</button>
             
             <label style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">Interiors</label>
-            <button class="house" onclick="startBuilding(5)">🏠 Generate House (Small)</button>
+            <button class="house" onclick="startBuilding(5)">🏠 Generate House (Single)</button>
             <button onclick="startBuilding(15)">🏰 Generate Dungeon (Large)</button>
             
             <label style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">Tools</label>
@@ -69,6 +70,13 @@
             <button class="secondary" onclick="endBuilding()">Exit Building</button>
         </div>
 
+        <div id="village-controls" class="card hidden">
+            <h3>Village Mode</h3>
+            <div id="village-status" style="margin-bottom:10px; color:#888;"></div>
+            <button id="btn-next-building" onclick="nextVillageStep()">Start Road 1</button>
+            <button class="secondary" onclick="endVillage()">Exit Village</button>
+        </div>
+
         <div class="card">
             <h3>Log Output</h3>
             <div id="output">Welcome to the DM Assistant. Configure above to start.</div>
@@ -80,6 +88,14 @@
     let config = {};
     let roomCounter = 0;
     let maxRooms = 0;
+    
+    // Village State
+    let vState = {
+        totalRoads: 0,
+        currentRoad: 0,
+        buildingsLeft: 0,
+        buildingCount: 0
+    };
     
     // --- MATH & LOGIC ---
     const BASE_STATS = {
@@ -111,6 +127,7 @@
         document.getElementById('setup-panel').classList.remove('hidden');
         document.getElementById('game-panel').classList.add('hidden');
         document.getElementById('room-controls').classList.add('hidden');
+        document.getElementById('village-controls').classList.add('hidden');
     }
 
     function calculateStats(tierName, isFinal = false) {
@@ -172,22 +189,22 @@
         log(formatEnemy('FinalBoss'));
     }
 
+    // --- DUNGEON (BUILDING) LOGIC ---
     function startBuilding(sizeLimit) {
         roomCounter = 0;
         
         if (sizeLimit === 5) {
-            // Small House Logic
             maxRooms = Math.floor(Math.random() * 5) + 1; 
             document.getElementById('room-title').innerText = "Small House";
             log(`<strong>--- ENTERING HOUSE (${maxRooms} Rooms) ---</strong>`);
         } else {
-            // Large Dungeon Logic
             maxRooms = Math.floor(Math.random() * 6) + 10;
             document.getElementById('room-title').innerText = "Dungeon Crawl";
             log(`<strong>--- ENTERING DUNGEON (${maxRooms} Rooms) ---</strong>`);
         }
 
         document.getElementById('room-controls').classList.remove('hidden');
+        document.getElementById('village-controls').classList.add('hidden'); // Ensure village is hidden
         clearLog();
         nextRoom();
     }
@@ -227,7 +244,6 @@
         }
         log("----------------");
         
-        // Auto scroll
         const out = document.getElementById('output');
         out.scrollTop = out.scrollHeight;
     }
@@ -237,31 +253,121 @@
         log("<strong>--- CLEARED ---</strong>");
     }
 
-    function startVillage() {
-        clearLog();
+    // --- VILLAGE LOGIC (NEW) ---
+
+    function initVillage() {
         let roads = prompt("How many roads?", "2");
         if(!roads) return;
         
-        log(`<strong>--- VILLAGE (${roads} Roads) ---</strong>`);
-        for(let r=1; r<=roads; r++) {
-            log(`<br><strong>=== ROAD ${r} ===</strong>`);
+        vState.totalRoads = parseInt(roads);
+        vState.currentRoad = 0;
+        vState.buildingsLeft = 0;
+        
+        clearLog();
+        log(`<strong>--- ENTERING VILLAGE (${vState.totalRoads} Roads) ---</strong>`);
+        
+        document.getElementById('village-controls').classList.remove('hidden');
+        document.getElementById('room-controls').classList.add('hidden');
+        
+        updateVillageUI();
+    }
+
+    function updateVillageUI() {
+        const btn = document.getElementById('btn-next-building');
+        const status = document.getElementById('village-status');
+        
+        if (vState.buildingsLeft > 0) {
+            btn.innerText = `Generate Building (${vState.buildingsLeft} remaining)`;
+            status.innerText = `Road ${vState.currentRoad} of ${vState.totalRoads}`;
+        } else if (vState.currentRoad < vState.totalRoads) {
+            btn.innerText = `Start Road ${vState.currentRoad + 1}`;
+            status.innerText = "Transit...";
+        } else {
+            btn.innerText = "Village Complete";
+            status.innerText = "All roads explored.";
+        }
+    }
+
+    function nextVillageStep() {
+        // Option 1: Start a new Road
+        if (vState.buildingsLeft <= 0) {
+            if (vState.currentRoad >= vState.totalRoads) {
+                log("Village exploration complete.");
+                return;
+            }
+            
+            vState.currentRoad++;
+            vState.buildingsLeft = Math.floor(Math.random() * 4) + 1; // 1-4 Buildings per road
+            vState.buildingCount = 0;
+
+            log(`<br><strong>=== ROAD ${vState.currentRoad} ===</strong>`);
+            
             // Road Event
             if(Math.random() < 0.25) {
-                if(Math.random() < 0.5) log(formatEnemy('MiniBoss') + " (Ambush)");
+                if(Math.random() < 0.5) log(formatEnemy('MiniBoss') + " (Ambush!)");
                 else log(`>> NPC TRADER (${['Common','Rare','Legendary'][Math.floor(Math.random()*3)]})`);
             } else {
                 log("Road is clear.");
             }
-
-            let buildings = Math.floor(Math.random() * 4) + 1;
-            // Updated Instruction Text
-            log(`Contains ${buildings} Buildings (Click 'Generate House' to enter one).`);
+            
+            updateVillageUI();
+            return;
         }
+
+        // Option 2: Generate a Whole Building
+        vState.buildingCount++;
+        vState.buildingsLeft--;
+        
+        let rooms = Math.floor(Math.random() * 5) + 1; // 1-5 Rooms
+        log(`<br><strong>🏠 Building ${vState.buildingCount} (Road ${vState.currentRoad})</strong> - ${rooms} Rooms`);
+        
+        // Generate ALL rooms at once
+        let buildingHTML = "";
+        for(let r=1; r<=rooms; r++) {
+            buildingHTML += `<div class="room-block">`;
+            
+            const size = ["Small", "Medium", "Large"][Math.floor(Math.random() * 3)];
+            
+            // Loot
+            let lootTxt = "None";
+            if (Math.random() < (0.3 + config.lootMod)) {
+                const rar = ["Common", "Rare", "Legendary"][Math.floor(Math.random() * 3)];
+                lootTxt = `${rar} Item`;
+            }
+            
+            buildingHTML += `<strong>Rm ${r}:</strong> ${size} | Loot: ${lootTxt}<br>`;
+
+            // Encounter
+            if (Math.random() < 0.3) {
+                let count = Math.floor(Math.random() * 2) + 1; // 1-2 enemies in house
+                for (let e=0; e<count; e++) {
+                    let tier = Math.random() > 0.9 ? 'MiniBoss' : 'Grunt';
+                    // Reusing formatEnemy but stripping the div to fit inline better
+                    let eStats = calculateStats(tier);
+                    let eLoot = generateLoot(tier);
+                    buildingHTML += `<span style="color:#cf6679;">> ${tier}: HP ${eStats.hp} (Drop: ${eLoot})</span><br>`;
+                }
+            } else {
+                buildingHTML += `<span style="color:#666;">> No Encounter</span>`;
+            }
+            
+            buildingHTML += `</div>`;
+        }
+        
+        log(buildingHTML);
+        updateVillageUI();
+        
+        const out = document.getElementById('output');
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function endVillage() {
+        document.getElementById('village-controls').classList.add('hidden');
+        log("<strong>--- LEFT VILLAGE ---</strong>");
     }
 
     function generatePlayer() {
         const lvl = config.level || 1;
-        // Point buy sim
         let str = 3, dex = 3, int = 3;
         let points = 10 + Math.floor(lvl * 2.5);
         for(let i=0; i<points; i++) {
@@ -269,7 +375,6 @@
             if(r < 0.33) str++; else if(r < 0.66) dex++; else int++;
         }
         
-        // Vitals
         let hp = 20 + (lvl * 6) + (str * 2);
         let mana = 10 + (lvl * 3) + (int * 2);
         let ac = 10 + Math.floor(lvl/2) + Math.floor(dex/3);
