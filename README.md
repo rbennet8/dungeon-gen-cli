@@ -107,3 +107,20 @@ A utility script to instantly generate stat blocks for players or NPCs. This is 
 * **Point-Buy Simulation:** It uses the same math as the "Player Rules" below, simulating a player distributing points into Strength, Dexterity, and Intelligence.
 * **Level Scaling:** Generates stats appropriate for any target level input.
 * **Trait Randomizer:** Rolls a random number (1-3) to determine how many physical or psychological traits the character should possess.
+
+
+# 🛡️ Combat Rules
+
+## The Combat Round
+1. **Initiative:** Roll `d20 + Dex`. Highest goes first.
+2. **Action:** Move and Attack/Cast/Item.
+
+## How to Attack
+1. **Roll to Hit:** `1d20 + Stat` (Str for Melee, Int for Magic).
+2. **Check:** If Result >= Enemy Armor, you hit.
+3. **Deal Damage:** `Weapon Damage + Stat`.
+
+## Enemy Logic
+* **Enemy Attack:** `d20 + Enemy Strength`. Hits if >= Player Armor.
+* **Enemy Damage:** Equals their **Strength** (Physical) or **Intelligence** (Magic).
+    * *Crit Rule:* If a Natural 20 is rolled, double the damage.
