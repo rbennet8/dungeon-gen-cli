@@ -61,6 +61,31 @@ When the DM grants a Level Up, apply the following increases to your character s
 > * **Armor:** +1 (Even levels only).
 
 
+# ⚔️ Item Balancing Guide
+
+Use this chart to determine how much damage items found in chests or dropped by enemies should do.
+
+## Weapon Damage Standards
+*Target: A standard enemy (Grunt) should die in 2-3 hits from a Common Weapon.*
+
+| Level | Common Dmg | Rare Dmg | Legendary Dmg |
+| :--- | :--- | :--- | :--- |
+| **1** | 10 | 15 | 20 |
+| **3** | 25 | 35 | 50 |
+| **5** | 40 | 60 | 80 |
+| **10** | 80 | 120 | 160 |
+
+## Consumable Ideas
+* **Health Potion:** Heals `Player Level * 10` HP.
+* **Grenade/Bomb:** Deals `Player Level * 15` Damage (AoE).
+* **Mana Potion:** Restores `Player Level * 5` Mana.
+
+## Rarity Effects
+* **Common:** Standard stats.
+* **Rare:** 1.5x Stats OR adds a passive effect (e.g., "Attacks inflict Bleed").
+* **Legendary:** 2.0x Stats OR adds a game-breaking ability (e.g., "Revive once per day", "Kill non-bosses instantly on a roll of 20").
+
+
 # 📂 Project Structure
 
 This repository contains two standalone Python scripts designed to run in a CLI (Command Line Interface).
