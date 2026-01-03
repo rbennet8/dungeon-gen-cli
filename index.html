@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM Assistant</title>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --accent: #bb86fc; --danger: #cf6679; }
+        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        h1, h2, h3 { color: var(--accent); border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .card { background-color: var(--card); padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; background: #333; color: white; border: 1px solid #444; border-radius: 4px; }
+        button { width: 100%; padding: 12px; margin-top: 10px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button.secondary { background-color: #444; color: white; }
+        button.danger { background-color: var(--danger); color: white; }
+        #output { white-space: pre-wrap; font-family: monospace; background: #000; padding: 15px; border-radius: 4px; min-height: 100px; border: 1px solid #333; }
+        .hidden { display: none; }
+        .enemy-row { border-bottom: 1px solid #333; padding: 5px 0; }
+        .rare { color: #03dac6; }
+        .legendary { color: #ffb74d; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>DM Assistant</h1>
+
+    <div id="setup-panel" class="card">
+        <h2>Campaign Setup</h2>
+        <label>Players</label> <input type="number" id="numPlayers" value="4">
+        <label>Avg Level</label> <input type="number" id="avgLevel" value="1">
+        
+        <label>Style</label>
+        <select id="style">
+            <option value="survival">Survival (Strong Enemies, Rare Loot)</option>
+            <option value="power">Power Fantasy (Horde Mode, Loot+)</option>
+        </select>
+
+        <label>Difficulty</label>
+        <select id="difficulty">
+            <option value="0.8">Easy</option>
+            <option value="1.0" selected>Medium</option>
+            <option value="1.2">Hard</option>
+        </select>
+
+        <button onclick="startGame()">Start Campaign</button>
+    </div>
+
+    <div id="game-panel" class="hidden">
+        <div class="card">
+            <h3>Actions</h3>
+            <button onclick="runField()">⚔️ Field (Horde)</button>
+            <button onclick="startBuilding()">🏰 Building (Dungeon)</button>
+            <button onclick="startVillage()">🏘️ Village</button>
+            <button class="secondary" onclick="generatePlayer()">👤 Generate Random NPC</button>
+            <button class="danger" onclick="resetGame()">⚙️ Re-Configure</button>
+        </div>
+
+        <div id="room-controls" class="card hidden">
+            <h3 id="room-title">Building Mode</h3>
+            <div id="room-status"></div>
+            <button onclick="nextRoom()">Generate Next Room</button>
+            <button class="secondary" onclick="endBuilding()">Exit Building</button>
+        </div>
+
+        <div class="card">
+            <h3>Log Output</h3>
+            <div id="output">Welcome to the DM Assistant. Configure above to start.</div>
+        </div>
+    </div>
+
+<script>
+    // --- STATE ---
+    let config = {};
+    let roomCounter = 0;
+    let maxRooms = 0;
+    let buildingMode = false;
+
+    // --- MATH & LOGIC ---
+    const BASE_STATS = {
+        Grunt: { hp: 20, mana: 5, str: 4, armor: 10 },
+        MiniBoss: { hp: 60, mana: 20, str: 8, armor: 14 },
+        Boss: { hp: 150, mana: 50, str: 12, armor: 16 },
+        FinalBoss: { hp: 400, mana: 100, str: 18, armor: 18 }
+    };
+
+    function startGame() {
+        config = {
+            players: parseInt(document.getElementById('numPlayers').value),
+            level: parseInt(document.getElementById('avgLevel').value),
+            style: document.getElementById('style').value,
+            diff: parseFloat(document.getElementById('difficulty').value)
+        };
+        
+        // Calculate Mods
+        config.statMod = config.style === 'survival' ? 1.5 : 0.6;
+        config.spawnMod = config.style === 'power' ? 4.0 : 1.0; // Horde Mode
+        config.lootMod = config.style === 'power' ? 0.2 : -0.2;
+
+        document.getElementById('setup-panel').classList.add('hidden');
+        document.getElementById('game-panel').classList.remove('hidden');
+        log("Campaign Started. Select a Biome.");
+    }
+
+    function resetGame() {
+        document.getElementById('setup-panel').classList.remove('hidden');
+        document.getElementById('game-panel').classList.add('hidden');
+        document.getElementById('room-controls').classList.add('hidden');
+    }
+
+    function calculateStats(tierName, isFinal = false) {
+        const base = BASE_STATS[tierName];
+        let totalMod = config.level * config.diff * config.statMod;
+        if (isFinal) totalMod *= 2.5;
+
+        return {
+            hp: Math.max(1, Math.floor(base.hp * totalMod)),
+            str: Math.max(1, Math.floor(base.str * totalMod)),
+            armor: Math.floor(base.armor * (1 + (config.level * 0.05)))
+        };
+    }
+
+    function generateLoot(tierName) {
+        let chance = 0.3 + config.lootMod;
+        if (tierName === 'MiniBoss') chance += 0.3;
+        if (tierName === 'Boss') chance += 0.5;
+        if (tierName === 'FinalBoss') return `<span class="legendary">Legendary Weapon/Item</span>`;
+
+        if (Math.random() > chance) return "None";
+
+        const roll = Math.random();
+        const types = ["Weapon", "Armor", "Consumable"];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        let rarity = "Common";
+        if (tierName === 'Grunt' && roll > 0.9) rarity = "Rare";
+        if (tierName === 'MiniBoss' && roll > 0.5) rarity = "<span class='rare'>Rare</span>";
+        if (tierName === 'Boss') rarity = roll > 0.3 ? "<span class='legendary'>Legendary</span>" : "<span class='rare'>Rare</span>";
+
+        return `${rarity} ${type}`;
+    }
+
+    function formatEnemy(tier, index) {
+        const stats = calculateStats(tier, tier === 'FinalBoss');
+        const loot = generateLoot(tier);
+        const name = index ? `${tier} #${index}` : tier;
+        return `<div class="enemy-row"><strong>[${name}]</strong> HP:${stats.hp} AC:${stats.armor} Str:${stats.str} | Drop: ${loot}</div>`;
+    }
+
+    // --- BIOME LOGIC ---
+
+    function runField() {
+        clearLog();
+        const count = Math.floor(config.players * config.spawnMod);
+        log(`<strong>--- FIELD BATTLE (${count} Enemies) ---</strong>`);
+        
+        let html = "";
+        for (let i = 1; i <= count; i++) {
+            let roll = Math.random();
+            let tier = 'Grunt';
+            if (roll > 0.95) tier = 'Boss';
+            else if (roll > 0.80) tier = 'MiniBoss';
+            html += formatEnemy(tier, i);
+        }
+        log(html);
+        log("<br><strong>!!! COMMANDER APPROACHING !!!</strong>");
+        log(formatEnemy('FinalBoss'));
+    }
+
+    function startBuilding() {
+        roomCounter = 0;
+        maxRooms = Math.floor(Math.random() * 6) + 10; // 10-15
+        document.getElementById('room-controls').classList.remove('hidden');
+        document.getElementById('room-title').innerText = "Dungeon Crawl";
+        clearLog();
+        log(`<strong>--- ENTERING BUILDING (${maxRooms} Rooms) ---</strong>`);
+        nextRoom();
+    }
+
+    function nextRoom() {
+        roomCounter++;
+        if (roomCounter > maxRooms) {
+            log("<br><strong>!!! FINAL ROOM !!!</strong>");
+            log(formatEnemy('FinalBoss'));
+            endBuilding();
+            return;
+        }
+
+        const size = ["Small", "Medium", "Huge"][Math.floor(Math.random() * 3)];
+        
+        // Loot Check
+        let lootTxt = "None";
+        if (Math.random() < (0.3 + config.lootMod)) {
+            const rarities = ["Common", "Rare", "Legendary"];
+            const r = rarities[Math.floor(Math.random() * rarities.length)];
+            lootTxt = `${r} Container`;
+        }
+
+        log(`<strong>[Room ${roomCounter}]</strong> Size: ${size} | Loot: ${lootTxt}`);
+
+        // Encounter Check
+        if (Math.random() < 0.4) {
+            let count = Math.floor(Math.random() * 3) + 1;
+            if (config.style === 'power') count *= 2;
+            
+            for (let i = 0; i < count; i++) {
+                let tier = Math.random() > 0.9 ? 'MiniBoss' : 'Grunt';
+                log(formatEnemy(tier, i+1));
+            }
+        } else {
+            log("No Enemies.");
+        }
+        log("----------------");
+        
+        // Auto scroll
+        const out = document.getElementById('output');
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function endBuilding() {
+        document.getElementById('room-controls').classList.add('hidden');
+        log("<strong>--- DUNGEON CLEARED ---</strong>");
+    }
+
+    function startVillage() {
+        clearLog();
+        let roads = prompt("How many roads?", "2");
+        if(!roads) return;
+        
+        log(`<strong>--- VILLAGE (${roads} Roads) ---</strong>`);
+        for(let r=1; r<=roads; r++) {
+            log(`<br><strong>=== ROAD ${r} ===</strong>`);
+            // Road Event
+            if(Math.random() < 0.25) {
+                if(Math.random() < 0.5) log(formatEnemy('MiniBoss') + " (Ambush)");
+                else log(`>> NPC TRADER (${['Common','Rare','Legendary'][Math.floor(Math.random()*3)]})`);
+            } else {
+                log("Road is clear.");
+            }
+
+            let buildings = Math.floor(Math.random() * 4) + 1;
+            log(`Contains ${buildings} Buildings (Click 'Building Mode' to enter one).`);
+        }
+    }
+
+    function generatePlayer() {
+        const lvl = config.level || 1;
+        // Point buy sim
+        let str = 3, dex = 3, int = 3;
+        let points = 10 + Math.floor(lvl * 2.5);
+        for(let i=0; i<points; i++) {
+            let r = Math.random();
+            if(r < 0.33) str++; else if(r < 0.66) dex++; else int++;
+        }
+        
+        // Vitals
+        let hp = 20 + (lvl * 6) + (str * 2);
+        let mana = 10 + (lvl * 3) + (int * 2);
+        let ac = 10 + Math.floor(lvl/2) + Math.floor(dex/3);
+        let traits = Math.floor(Math.random() * 3) + 1;
+
+        log(`<br><strong>👤 NPC / Player (Lvl ${lvl})</strong>`);
+        log(`HP: ${hp} | Mana: ${mana} | AC: ${ac}`);
+        log(`Str: ${str} | Dex: ${dex} | Int: ${int}`);
+        log(`Traits: ${traits}`);
+    }
+
+    // --- UTILS ---
+    function log(msg) {
+        document.getElementById('output').innerHTML += msg + "\n";
+        const out = document.getElementById('output');
+        out.scrollTop = out.scrollHeight;
+    }
+    function clearLog() {
+        document.getElementById('output').innerHTML = "";
+    }
+</script>
+</body>
+</html>
