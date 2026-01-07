@@ -166,6 +166,10 @@
         return "Yes";
     }
 
+    function generateEvent() {
+        return "Yes";
+    }
+
     function formatEnemy(tier, index) {
         const stats = calculateStats(tier, tier === 'FinalBoss');
         const loot = generateLoot(tier);
@@ -259,10 +263,9 @@
         }
 
         // Event Check (rare random event)
-        const roomEvents = ["Strange Noise", "NPC Hiding", "Puzzle Lock", "Environmental Hazard"];
         let eventTxt = "None";
         if (Math.random() < 0.15) {
-            eventTxt = roomEvents[Math.floor(Math.random() * roomEvents.length)];
+            eventTxt = generateEvent();
             hasContent = true;
         }
 
@@ -276,7 +279,7 @@
             } else if (fallback === 2) {
                 secretTxt = generateSecret();
             } else {
-                eventTxt = roomEvents[Math.floor(Math.random() * roomEvents.length)];
+                eventTxt = generateEvent();
             }
         }
 
@@ -382,7 +385,7 @@
                 } else if (fallback === 1) {
                     log(`>> Secret: ${generateSecret()}`);
                 } else {
-                    log(`>> Event: ${['Broken Cart', 'Footprints', 'Campfire Remains', 'Lost Item'][Math.floor(Math.random() * 4)]}`);
+                    log(`>> Event: ${generateEvent()}`);
                 }
             }
             
@@ -430,10 +433,9 @@
             }
             
             // Event
-            const buildingEvents = ["NPC Resident", "Locked Chest", "Barricaded Door", "Strange Smell"];
             let eventTxt = "None";
             if (Math.random() < 0.15) {
-                eventTxt = buildingEvents[Math.floor(Math.random() * buildingEvents.length)];
+                eventTxt = generateEvent();
                 hasContent = true;
             }
             
@@ -447,7 +449,7 @@
                 } else if (fallback === 2) {
                     secretTxt = generateSecret();
                 } else {
-                    eventTxt = buildingEvents[Math.floor(Math.random() * buildingEvents.length)];
+                    eventTxt = generateEvent();
                 }
             }
             
